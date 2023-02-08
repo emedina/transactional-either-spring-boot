@@ -12,6 +12,12 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import java.lang.reflect.AnnotatedElement;
 
+/**
+ * This class is a copy of {@link SpringTransactionAnnotationParser} with the only difference that
+ * it translates the transactional attributes used in {@link Transactional} to the Spring types.
+ *
+ * @author Enrique Medina Montenegro (em54029)
+ */
 @SuppressWarnings("serial")
 public class SpringTransactionAnnotationParserWithEither extends SpringTransactionAnnotationParser {
 

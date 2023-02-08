@@ -1,13 +1,26 @@
 package org.epo.cne.transactional.support;
 
+
 import org.epo.cne.transactional.config.EnableTransactionManagementWithEither;
 import org.epo.cne.transactional.config.ProxyTransactionManagementConfigurationWithEither;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.AdviceModeImportSelector;
 import org.springframework.context.annotation.AutoProxyRegistrar;
+import org.springframework.transaction.annotation.AbstractTransactionManagementConfiguration;
 import org.springframework.transaction.config.TransactionManagementConfigUtils;
 import org.springframework.util.ClassUtils;
 
+/**
+ * Selects which implementation of {@link AbstractTransactionManagementConfiguration}
+ * should be used based on the value of {@link EnableTransactionManagementWithEither#mode} on the
+ * importing {@code @Configuration} class.
+ *
+ * @author Enrique Medina Montenegro (em54029)
+ * @see EnableTransactionManagementWithEither
+ * @see ProxyTransactionManagementConfigurationWithEither
+ * @see TransactionManagementConfigUtils#TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME
+ * @see TransactionManagementConfigUtils#JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME
+ */
 public class TransactionManagementConfigurationSelectorWithEither
         extends AdviceModeImportSelector<EnableTransactionManagementWithEither> {
 

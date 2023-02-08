@@ -1,20 +1,27 @@
 package org.epo.cne.transactional.config;
 
+import io.vavr.control.Either;
 import org.epo.cne.transactional.support.SpringTransactionAnnotationParserWithEither;
-import org.epo.cne.transactional.support.TransactionInterceptorWithEither;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.annotation.AbstractTransactionManagementConfiguration;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.config.TransactionManagementConfigUtils;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 
+/**
+ * {@code @Configuration} class that registers a {@link BeanFactoryTransactionAttributeSourceAdvisor}
+ * that is aware of the monadic type {@link Either} and can be used to enable
+ * Spring's annotation-driven transaction management capability.
+ *
+ * @author Enrique Medina Montenegro (em54029)
+ */
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class ProxyTransactionManagementConfigurationWithEither extends AbstractTransactionManagementConfiguration {
@@ -32,14 +39,15 @@ public class ProxyTransactionManagementConfigurationWithEither extends AbstractT
     @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
-            TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptorWithEither) {
+            TransactionAttributeSource transactionAttributeSource, TransactionInterceptor transactionInterceptor) {
 
         BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
         advisor.setTransactionAttributeSource(transactionAttributeSource);
-        advisor.setAdvice(transactionInterceptorWithEither);
+        advisor.setAdvice(transactionInterceptor);
         if (this.enableTx != null) {
             advisor.setOrder(this.enableTx.<Integer>getNumber("order"));
         }
+
         return advisor;
     }
 
@@ -52,13 +60,10 @@ public class ProxyTransactionManagementConfigurationWithEither extends AbstractT
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionInterceptorWithEither transactionInterceptor(TransactionAttributeSource transactionAttributeSource, TransactionManager txManager) {
-        org.springframework.transaction.interceptor.TransactionInterceptor delegate =
-                new org.springframework.transaction.interceptor.TransactionInterceptor(txManager, transactionAttributeSource);
-
-        TransactionInterceptorWithEither result = new TransactionInterceptorWithEither(delegate);
+    public TransactionInterceptor transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
+        TransactionInterceptor result = new TransactionInterceptor();
         result.setTransactionAttributeSource(transactionAttributeSource);
-        result.setTransactionManager(delegate.getTransactionManager());
+
         return result;
     }
 

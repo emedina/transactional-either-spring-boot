@@ -1,21 +1,29 @@
 package org.epo.cne.transactional.support;
 
 import io.vavr.control.Either;
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.reactive.AwaitKt;
+import kotlinx.coroutines.reactive.ReactiveFlowKt;
+import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.BeanFactoryAnnotationUtils;
-import org.springframework.core.NamedThreadLocal;
+import org.springframework.core.*;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.*;
 import org.springframework.transaction.interceptor.*;
+import org.springframework.transaction.reactive.TransactionContextManager;
 import org.springframework.transaction.support.CallbackPreferringPlatformTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -24,11 +32,10 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Re-implementation of the abstract base class {@link TransactionAspectSupport} to override the protected method
- * {@link TransactionAspectSupport#invokeWithinTransaction} to support also the {@link Either} type.
+ * Re-implementation of the abstract base class {@link TransactionAspectSupport}
+ * to support also the {@link Either} type.
  *
  * @author Enrique Medina Montenegro (em54029)
- * @see Either
  */
 public abstract class TransactionAspectSupportWithEither implements BeanFactoryAware, InitializingBean {
 
@@ -41,11 +48,19 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
      */
     private static final Object DEFAULT_TRANSACTION_MANAGER_KEY = new Object();
 
+    private static final String COROUTINES_FLOW_CLASS_NAME = "kotlinx.coroutines.flow.Flow";
+
     /**
      * Vavr library present on the classpath?
      */
     private static final boolean vavrPresent = ClassUtils.isPresent(
             "io.vavr.control.Either", TransactionAspectSupport.class.getClassLoader());
+
+    /**
+     * Reactive Streams API present on the classpath?
+     */
+    private static final boolean reactiveStreamsPresent =
+            ClassUtils.isPresent("org.reactivestreams.Publisher", TransactionAspectSupport.class.getClassLoader());
 
     /**
      * Holder to support the {@code currentTransactionStatus()} method,
@@ -100,6 +115,9 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
     protected final Log logger = LogFactory.getLog(getClass());
 
     @Nullable
+    private final ReactiveAdapterRegistry reactiveAdapterRegistry;
+
+    @Nullable
     private String transactionManagerBeanName;
 
     @Nullable
@@ -114,13 +132,23 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
     private final ConcurrentMap<Object, TransactionManager> transactionManagerCache =
             new ConcurrentReferenceHashMap<>(4);
 
+    private final ConcurrentMap<Method, ReactiveTransactionSupport> transactionSupportCache =
+            new ConcurrentReferenceHashMap<>(1024);
+
+
     protected TransactionAspectSupportWithEither() {
+        if (reactiveStreamsPresent) {
+            this.reactiveAdapterRegistry = ReactiveAdapterRegistry.getSharedInstance();
+        } else {
+            this.reactiveAdapterRegistry = null;
+        }
     }
 
 
     /**
      * Specify the name of the default transaction manager bean.
-     * <p>This points to a traditional {@link PlatformTransactionManager} .
+     * <p>This can either point to a traditional {@link PlatformTransactionManager} or a
+     * {@link ReactiveTransactionManager} for reactive transaction management.
      */
     public void setTransactionManagerBeanName(@Nullable String transactionManagerBeanName) {
         this.transactionManagerBeanName = transactionManagerBeanName;
@@ -136,7 +164,8 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
 
     /**
      * Specify the <em>default</em> transaction manager to use to drive transactions.
-     * <p>This can either be a traditional {@link PlatformTransactionManager}.
+     * <p>This can either be a traditional {@link PlatformTransactionManager} or a
+     * {@link ReactiveTransactionManager} for reactive transaction management.
      * <p>The default transaction manager will be used if a <em>qualifier</em>
      * has not been declared for a given transaction or if an explicit name for the
      * default transaction manager bean has not been specified.
@@ -149,7 +178,8 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
 
     /**
      * Return the default transaction manager, or {@code null} if unknown.
-     * <p>This can either be a traditional {@link PlatformTransactionManager}.
+     * <p>This can either be a traditional {@link PlatformTransactionManager} or a
+     * {@link ReactiveTransactionManager} for reactive transaction management.
      */
     @Nullable
     public TransactionManager getTransactionManager() {
@@ -247,7 +277,8 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
     /**
      * General delegate for around-advice-based subclasses, delegating to several other template
      * methods on this class. Able to handle {@link CallbackPreferringPlatformTransactionManager}
-     * as well as regular {@link PlatformTransactionManager} implementations.
+     * as well as regular {@link PlatformTransactionManager} implementations and
+     * {@link ReactiveTransactionManager} implementations for reactive return types.
      *
      * @param method      the Method being invoked
      * @param targetClass the target class that we're invoking the method on
@@ -263,6 +294,40 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
         TransactionAttributeSource tas = getTransactionAttributeSource();
         final TransactionAttribute txAttr = (tas != null ? tas.getTransactionAttribute(method, targetClass) : null);
         final TransactionManager tm = determineTransactionManager(txAttr);
+
+        if (this.reactiveAdapterRegistry != null && tm instanceof ReactiveTransactionManager) {
+            boolean isSuspendingFunction = KotlinDetector.isSuspendingFunction(method);
+            boolean hasSuspendingFlowReturnType = isSuspendingFunction &&
+                    COROUTINES_FLOW_CLASS_NAME.equals(new MethodParameter(method, -1).getParameterType().getName());
+            if (isSuspendingFunction && !(invocation instanceof CoroutinesInvocationCallback)) {
+                throw new IllegalStateException("Coroutines invocation not supported: " + method);
+            }
+            CoroutinesInvocationCallback corInv = (isSuspendingFunction ? (CoroutinesInvocationCallback) invocation : null);
+
+            ReactiveTransactionSupport txSupport = this.transactionSupportCache.computeIfAbsent(method, key -> {
+                Class<?> reactiveType =
+                        (isSuspendingFunction ? (hasSuspendingFlowReturnType ? Flux.class : Mono.class) : method.getReturnType());
+                // Check whether reactive type is an Either, in which case we need to unwrap it.
+                ReactiveAdapter adapter = this.reactiveAdapterRegistry.getAdapter(reactiveType);
+                if (adapter == null) {
+                    throw new IllegalStateException("Cannot apply reactive transaction to non-reactive return type: " +
+                            method.getReturnType());
+                }
+                return new ReactiveTransactionSupport(adapter);
+            });
+
+            InvocationCallback callback = invocation;
+            if (corInv != null) {
+                callback = () -> CoroutinesUtils.invokeSuspendingFunction(method, corInv.getTarget(), corInv.getArguments());
+            }
+            Object result = txSupport.invokeWithinTransaction(method, targetClass, callback, txAttr, (ReactiveTransactionManager) tm);
+            if (corInv != null) {
+                Publisher<?> pr = (Publisher<?>) result;
+                return (hasSuspendingFlowReturnType ? KotlinDelegate.asFlow(pr) :
+                        KotlinDelegate.awaitSingleOrNull(pr, corInv.getContinuation()));
+            }
+            return result;
+        }
 
         PlatformTransactionManager ptm = asPlatformTransactionManager(tm);
         final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
@@ -743,6 +808,39 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
             });
         }
 
+        public static Either<?, ?> rollbackTransactionOnEitherLeft(Either<?, ?> retVal, ReactiveTransactionInfo txInfo) {
+            return retVal.peekLeft(ex -> {
+                if (txInfo != null && txInfo.getReactiveTransaction() != null) {
+                    txInfo.getTransactionManager().rollback(txInfo.getReactiveTransaction());
+                }
+            });
+        }
+
+        /**
+         * Determine whether the given method returns an Either or is wrapped by a reactive type.
+         *
+         * @param invocation the method invocation
+         * @return {@code true} if the method returns an Either or is wrapped by a reactive type
+         */
+        public static boolean determineEitherType(MethodInvocation invocation) {
+            if (Either.class.isAssignableFrom(invocation.getMethod().getReturnType())) {
+                return true;
+            }
+
+            // Check for a reactive type wrapper (any subtype of org.reactivestreams.Publisher).
+            if (invocation.getMethod().getReturnType().getInterfaces().length > 0) {
+                for (Class<?> clazz : invocation.getMethod().getReturnType().getInterfaces()) {
+                    if (Publisher.class.isAssignableFrom(clazz)) {
+                        return Either.class.isAssignableFrom(
+                                VavrDelegate.determineRightType(invocation.getMethod().getGenericReturnType()));
+                    }
+                }
+            }
+
+            // Otherwise...
+            return false;
+        }
+
         /**
          * Determines what the type of the right part of this {@link Either} is.
          *
@@ -770,6 +868,255 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
             }
         }
 
+    }
+
+    /**
+     * Inner class to avoid a hard dependency on Kotlin at runtime.
+     */
+    private static class KotlinDelegate {
+
+        private static Object asFlow(Publisher<?> publisher) {
+            return ReactiveFlowKt.asFlow(publisher);
+        }
+
+        @SuppressWarnings({"unchecked", "deprecation"})
+        @Nullable
+        private static Object awaitSingleOrNull(Publisher<?> publisher, Object continuation) {
+            return AwaitKt.awaitSingleOrNull(publisher, (Continuation<Object>) continuation);
+        }
+    }
+
+
+    /**
+     * Delegate for Reactor-based management of transactional methods with a
+     * reactive return type.
+     */
+    private class ReactiveTransactionSupport {
+
+        private final ReactiveAdapter adapter;
+
+        public ReactiveTransactionSupport(ReactiveAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        public Object invokeWithinTransaction(Method method, @Nullable Class<?> targetClass,
+                                              InvocationCallback invocation, @Nullable TransactionAttribute txAttr, ReactiveTransactionManager rtm) {
+
+            String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
+
+            // For Mono and suspending functions not returning kotlinx.coroutines.flow.Flow
+            if (Mono.class.isAssignableFrom(method.getReturnType()) || (KotlinDetector.isSuspendingFunction(method) &&
+                    !COROUTINES_FLOW_CLASS_NAME.equals(new MethodParameter(method, -1).getParameterType().getName()))) {
+                return TransactionContextManager.currentContext().flatMap(context ->
+                                createTransactionIfNecessary(rtm, txAttr, joinpointIdentification).flatMap(it -> {
+                                    try {
+                                        // Need re-wrapping until we get hold of the exception through usingWhen.
+                                        return Mono.<Object, ReactiveTransactionInfo>usingWhen(
+                                                        Mono.just(it),
+                                                        txInfo -> {
+                                                            try {
+                                                                if (Either.class.isAssignableFrom(VavrDelegate.determineRightType(method.getGenericReturnType()))) {
+                                                                    return ((Mono<?>) invocation.proceedWithInvocation())
+                                                                            .map(retVal -> VavrDelegate.rollbackTransactionOnEitherLeft((Either<?, ?>) retVal, txInfo));
+                                                                }
+                                                                return (Mono<?>) invocation.proceedWithInvocation();
+                                                            } catch (Throwable ex) {
+                                                                return Mono.error(ex);
+                                                            }
+                                                        },
+                                                        this::commitTransactionAfterReturning,
+                                                        (txInfo, err) -> Mono.empty(),
+                                                        this::rollbackTransactionOnCancel)
+                                                .onErrorResume(ex ->
+                                                        completeTransactionAfterThrowing(it, ex).then(Mono.error(ex)));
+                                    } catch (Throwable ex) {
+                                        // target invocation exception
+                                        return completeTransactionAfterThrowing(it, ex).then(Mono.error(ex));
+                                    }
+                                })).contextWrite(TransactionContextManager.getOrCreateContext())
+                        .contextWrite(TransactionContextManager.getOrCreateContextHolder());
+            }
+
+            // Any other reactive type, typically a Flux
+            return this.adapter.fromPublisher(TransactionContextManager.currentContext().flatMapMany(context ->
+                            createTransactionIfNecessary(rtm, txAttr, joinpointIdentification).flatMapMany(it -> {
+                                try {
+                                    // Need re-wrapping until we get hold of the exception through usingWhen.
+                                    return Flux
+                                            .usingWhen(
+                                                    Mono.just(it),
+                                                    txInfo -> {
+                                                        try {
+                                                            return this.adapter.toPublisher(invocation.proceedWithInvocation());
+                                                        } catch (Throwable ex) {
+                                                            return Mono.error(ex);
+                                                        }
+                                                    },
+                                                    this::commitTransactionAfterReturning,
+                                                    (txInfo, ex) -> Mono.empty(),
+                                                    this::rollbackTransactionOnCancel)
+                                            .onErrorResume(ex ->
+                                                    completeTransactionAfterThrowing(it, ex).then(Mono.error(ex)));
+                                } catch (Throwable ex) {
+                                    // target invocation exception
+                                    return completeTransactionAfterThrowing(it, ex).then(Mono.error(ex));
+                                }
+                            })).contextWrite(TransactionContextManager.getOrCreateContext())
+                    .contextWrite(TransactionContextManager.getOrCreateContextHolder()));
+        }
+
+        @SuppressWarnings("serial")
+        private Mono<ReactiveTransactionInfo> createTransactionIfNecessary(ReactiveTransactionManager tm,
+                                                                           @Nullable TransactionAttribute txAttr, final String joinpointIdentification) {
+
+            // If no name specified, apply method identification as transaction name.
+            if (txAttr != null && txAttr.getName() == null) {
+                txAttr = new DelegatingTransactionAttribute(txAttr) {
+                    @Override
+                    public String getName() {
+                        return joinpointIdentification;
+                    }
+                };
+            }
+
+            final TransactionAttribute attrToUse = txAttr;
+            Mono<ReactiveTransaction> tx = (attrToUse != null ? tm.getReactiveTransaction(attrToUse) : Mono.empty());
+            return tx.map(it -> prepareTransactionInfo(tm, attrToUse, joinpointIdentification, it)).switchIfEmpty(
+                    Mono.defer(() -> Mono.just(prepareTransactionInfo(tm, attrToUse, joinpointIdentification, null))));
+        }
+
+        private ReactiveTransactionInfo prepareTransactionInfo(@Nullable ReactiveTransactionManager tm,
+                                                               @Nullable TransactionAttribute txAttr, String joinpointIdentification,
+                                                               @Nullable ReactiveTransaction transaction) {
+
+            ReactiveTransactionInfo txInfo = new ReactiveTransactionInfo(tm, txAttr, joinpointIdentification);
+            if (txAttr != null) {
+                // We need a transaction for this method...
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Getting transaction for [" + txInfo.getJoinpointIdentification() + "]");
+                }
+                // The transaction manager will flag an error if an incompatible tx already exists.
+                txInfo.newReactiveTransaction(transaction);
+            } else {
+                // The TransactionInfo.hasTransaction() method will return false. We created it only
+                // to preserve the integrity of the ThreadLocal stack maintained in this class.
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Don't need to create transaction for [" + joinpointIdentification +
+                            "]: This method isn't transactional.");
+                }
+            }
+
+            return txInfo;
+        }
+
+        private Mono<Void> commitTransactionAfterReturning(@Nullable ReactiveTransactionInfo txInfo) {
+            if (txInfo != null && txInfo.getReactiveTransaction() != null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Completing transaction for [" + txInfo.getJoinpointIdentification() + "]");
+                }
+                return txInfo.getTransactionManager().commit(txInfo.getReactiveTransaction());
+            }
+            return Mono.empty();
+        }
+
+        private Mono<Void> rollbackTransactionOnCancel(@Nullable ReactiveTransactionInfo txInfo) {
+            if (txInfo != null && txInfo.getReactiveTransaction() != null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Rolling back transaction for [" + txInfo.getJoinpointIdentification() + "] after cancellation");
+                }
+                return txInfo.getTransactionManager().rollback(txInfo.getReactiveTransaction());
+            }
+            return Mono.empty();
+        }
+
+        private Mono<Void> completeTransactionAfterThrowing(@Nullable ReactiveTransactionInfo txInfo, Throwable ex) {
+            if (txInfo != null && txInfo.getReactiveTransaction() != null) {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Completing transaction for [" + txInfo.getJoinpointIdentification() +
+                            "] after exception: " + ex);
+                }
+                if (txInfo.transactionAttribute != null && txInfo.transactionAttribute.rollbackOn(ex)) {
+                    return txInfo.getTransactionManager().rollback(txInfo.getReactiveTransaction()).onErrorMap(ex2 -> {
+                                logger.error("Application exception overridden by rollback exception", ex);
+                                if (ex2 instanceof TransactionSystemException) {
+                                    ((TransactionSystemException) ex2).initApplicationException(ex);
+                                }
+                                return ex2;
+                            }
+                    );
+                } else {
+                    // We don't roll back on this exception.
+                    // Will still roll back if TransactionStatus.isRollbackOnly() is true.
+                    return txInfo.getTransactionManager().commit(txInfo.getReactiveTransaction()).onErrorMap(ex2 -> {
+                                logger.error("Application exception overridden by commit exception", ex);
+                                if (ex2 instanceof TransactionSystemException) {
+                                    ((TransactionSystemException) ex2).initApplicationException(ex);
+                                }
+                                return ex2;
+                            }
+                    );
+                }
+            }
+            return Mono.empty();
+        }
+    }
+
+
+    /**
+     * Opaque object used to hold transaction information for reactive methods.
+     */
+    private static final class ReactiveTransactionInfo {
+
+        @Nullable
+        private final ReactiveTransactionManager transactionManager;
+
+        @Nullable
+        private final TransactionAttribute transactionAttribute;
+
+        private final String joinpointIdentification;
+
+        @Nullable
+        private ReactiveTransaction reactiveTransaction;
+
+        public ReactiveTransactionInfo(@Nullable ReactiveTransactionManager transactionManager,
+                                       @Nullable TransactionAttribute transactionAttribute, String joinpointIdentification) {
+
+            this.transactionManager = transactionManager;
+            this.transactionAttribute = transactionAttribute;
+            this.joinpointIdentification = joinpointIdentification;
+        }
+
+        public ReactiveTransactionManager getTransactionManager() {
+            Assert.state(this.transactionManager != null, "No ReactiveTransactionManager set");
+            return this.transactionManager;
+        }
+
+        @Nullable
+        public TransactionAttribute getTransactionAttribute() {
+            return this.transactionAttribute;
+        }
+
+        /**
+         * Return a String representation of this joinpoint (usually a Method call)
+         * for use in logging.
+         */
+        public String getJoinpointIdentification() {
+            return this.joinpointIdentification;
+        }
+
+        public void newReactiveTransaction(@Nullable ReactiveTransaction transaction) {
+            this.reactiveTransaction = transaction;
+        }
+
+        @Nullable
+        public ReactiveTransaction getReactiveTransaction() {
+            return this.reactiveTransaction;
+        }
+
+        @Override
+        public String toString() {
+            return (this.transactionAttribute != null ? this.transactionAttribute.toString() : "No transaction");
+        }
     }
 
 }

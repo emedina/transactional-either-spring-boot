@@ -1,13 +1,20 @@
 package org.epo.cne.transactional.config;
 
+import io.vavr.control.Either;
+import org.epo.cne.sharedkernel.transactional.Transactional;
 import org.epo.cne.transactional.support.TransactionManagementConfigurationSelectorWithEither;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.*;
 
+/**
+ * Annotation that enables Spring's annotation-driven transaction management capability with {@link Either},
+ * keeping backwards compatibility in case it is not used.
+ *
+ * @author Enrique Medina Montenegro (em54029)
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
