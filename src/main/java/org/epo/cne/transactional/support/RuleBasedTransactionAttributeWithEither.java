@@ -1,0 +1,86 @@
+package org.epo.cne.transactional.support;
+
+import io.vavr.control.Either;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.lang.Nullable;
+import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
+import org.springframework.transaction.interceptor.TransactionAttribute;
+
+import java.util.List;
+
+/**
+ * Extension of the {@link RuleBasedTransactionAttribute} that allows to use the {@link Either} type.
+ *
+ * @author Enrique Medina Montenegro (em54029)
+ */
+public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactionAttribute {
+
+    @Getter
+    @Setter
+    @Nullable
+    private List<RollbackRuleAttributeWithEither> rollbackRulesWithEither;
+
+
+    private RuleBasedTransactionAttributeWithEither(RuleBasedTransactionAttribute ruleBasedTransactionAttribute) {
+        super(ruleBasedTransactionAttribute);
+    }
+
+    public static RuleBasedTransactionAttributeWithEither from(RuleBasedTransactionAttribute ruleBasedTransactionAttribute) {
+        return new RuleBasedTransactionAttributeWithEither(ruleBasedTransactionAttribute);
+    }
+
+    /**
+     * Winning rule is the shallowest rule (that is, the closest in the
+     * inheritance hierarchy to the exception). If no rule applies (-1),
+     * return false.
+     * <p>When used with the {@link Either} type, the String </p>
+     *
+     * @see TransactionAttribute#rollbackOn(java.lang.Throwable)
+     */
+    @Override
+    public boolean rollbackOn(Throwable ex) {
+        RollbackRuleAttributeWithEither winner = null;
+        int deepest = Integer.MAX_VALUE;
+
+        if (this.rollbackRulesWithEither != null) {
+            for (RollbackRuleAttributeWithEither rule : this.rollbackRulesWithEither) {
+                int depth = rule.getDepth(ex.getClass(), 0);
+                if (depth >= 0 && depth < deepest) {
+                    deepest = depth;
+                    winner = rule;
+                }
+            }
+        }
+
+        // User superclass behavior (rollback on unchecked) if no rule matches.
+        if (winner == null) {
+            return super.rollbackOn(ex);
+        }
+
+        return !(winner instanceof NoRollbackRuleAttributeWithEither);
+    }
+
+    public boolean rollbackOnErrorValue(Class<?> error) {
+        RollbackRuleAttributeWithEither winner = null;
+        int deepest = Integer.MAX_VALUE;
+
+        if (this.rollbackRulesWithEither != null) {
+            for (RollbackRuleAttributeWithEither rule : this.rollbackRulesWithEither) {
+                int depth = rule.getDepth(error, 0);
+                if (depth >= 0 && depth < deepest) {
+                    deepest = depth;
+                    winner = rule;
+                }
+            }
+        }
+
+        // User superclass behavior (rollback on unchecked) if no rule matches.
+        if (winner == null) {
+            return false;
+        }
+
+        return !(winner instanceof NoRollbackRuleAttributeWithEither);
+    }
+
+}

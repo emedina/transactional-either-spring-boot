@@ -2,6 +2,7 @@ package org.epo.cne.transactional.config;
 
 import io.vavr.control.Either;
 import org.epo.cne.transactional.support.SpringTransactionAnnotationParserWithEither;
+import org.epo.cne.transactional.support.TransactionInterceptorWithEither;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.AnnotationTransactionAttribute
 import org.springframework.transaction.config.TransactionManagementConfigUtils;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
-import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 /**
  * {@code @Configuration} class that registers a {@link BeanFactoryTransactionAttributeSourceAdvisor}
@@ -39,7 +39,7 @@ public class ProxyTransactionManagementConfigurationWithEither extends AbstractT
     @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
-            TransactionAttributeSource transactionAttributeSource, TransactionInterceptor transactionInterceptor) {
+            TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptor) {
 
         BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
         advisor.setTransactionAttributeSource(transactionAttributeSource);
@@ -60,8 +60,8 @@ public class ProxyTransactionManagementConfigurationWithEither extends AbstractT
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionInterceptor transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
-        TransactionInterceptor result = new TransactionInterceptor();
+    public TransactionInterceptorWithEither transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
+        TransactionInterceptorWithEither result = new TransactionInterceptorWithEither();
         result.setTransactionAttributeSource(transactionAttributeSource);
 
         return result;

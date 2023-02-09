@@ -8,9 +8,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.SpringTransactionAnnotationParser;
+import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is a copy of {@link SpringTransactionAnnotationParser} with the only difference that
@@ -35,7 +38,26 @@ public class SpringTransactionAnnotationParserWithEither extends SpringTransacti
             // Override with "real" Spring types.
             attributes.put("propagation", Propagation.valueOf(attributes.get("propagation").toString()));
             attributes.put("isolation", Isolation.valueOf(attributes.get("isolation").toString()));
-            return super.parseTransactionAnnotation(attributes);
+
+            // Add additional attributes specific to the use of Either.
+            RuleBasedTransactionAttributeWithEither rbta = RuleBasedTransactionAttributeWithEither.from(
+                    (RuleBasedTransactionAttribute) super.parseTransactionAnnotation(attributes));
+            List<RollbackRuleAttributeWithEither> rollbackRules = new ArrayList<>();
+            for (Class<?> rbRule : attributes.getClassArray("rollbackForWithEither")) {
+                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+            }
+            for (String rbRule : attributes.getStringArray("rollbackForClassNameWithEither")) {
+                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+            }
+            for (Class<?> rbRule : attributes.getClassArray("noRollbackForWithEither")) {
+                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+            }
+            for (String rbRule : attributes.getStringArray("noRollbackForClassNameWithEither")) {
+                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+            }
+            rbta.setRollbackRulesWithEither(rollbackRules);
+
+            return rbta;
         } else {
             return null;
         }

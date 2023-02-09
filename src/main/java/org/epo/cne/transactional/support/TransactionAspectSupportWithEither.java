@@ -4,6 +4,7 @@ import io.vavr.control.Either;
 import kotlin.coroutines.Continuation;
 import kotlinx.coroutines.reactive.AwaitKt;
 import kotlinx.coroutines.reactive.ReactiveFlowKt;
+import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -524,7 +525,7 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
 
         // If no name specified, apply method identification as transaction name.
         if (txAttr != null && txAttr.getName() == null) {
-            txAttr = new DelegatingTransactionAttribute(txAttr) {
+            txAttr = new DelegatingTransactionAttributeWithEither(txAttr) {
                 @Override
                 public String getName() {
                     return joinpointIdentification;
@@ -794,6 +795,7 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
     /**
      * Inner class to avoid a hard dependency on the Vavr library at runtime.
      */
+    @Slf4j
     public static class VavrDelegate {
 
         public static boolean isVavrEither(Object retVal) {
@@ -808,10 +810,26 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
             });
         }
 
-        public static Either<?, ?> rollbackTransactionOnEitherLeft(Either<?, ?> retVal, ReactiveTransactionInfo txInfo) {
-            return retVal.peekLeft(ex -> {
-                if (txInfo != null && txInfo.getReactiveTransaction() != null) {
-                    txInfo.getTransactionManager().rollback(txInfo.getReactiveTransaction());
+        public static Either<?, ?> evaluateReactiveEitherLeft(Object retVal, ReactiveTransactionInfo txinfo) {
+            return ((Either<?, ?>) retVal).peekLeft(errors -> {
+                if (txinfo != null && txinfo.getTransactionAttribute() instanceof DelegatingTransactionAttributeWithEither) {
+                    final DelegatingTransactionAttributeWithEither ruleBasedTxAttr =
+                            (DelegatingTransactionAttributeWithEither) txinfo.getTransactionAttribute();
+                    if (errors instanceof Iterable) {
+                        for (Object error : (Iterable<?>) errors) {
+                            if (error instanceof Throwable && ruleBasedTxAttr.rollbackOn((Throwable) error)) {
+                                txinfo.getReactiveTransaction().setRollbackOnly();
+                                break;
+                            } else if (ruleBasedTxAttr.rollbackOnErrorValue(error.getClass())) {
+                                txinfo.getReactiveTransaction().setRollbackOnly();
+                                break;
+                            }
+                        }
+                    } else if (errors instanceof Throwable && ruleBasedTxAttr.rollbackOn((Throwable) errors)) {
+                        txinfo.getReactiveTransaction().setRollbackOnly();
+                    } else if (ruleBasedTxAttr.rollbackOnErrorValue(errors.getClass())) {
+                        txinfo.getReactiveTransaction().setRollbackOnly();
+                    }
                 }
             });
         }
@@ -916,8 +934,8 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
                                                         txInfo -> {
                                                             try {
                                                                 if (Either.class.isAssignableFrom(VavrDelegate.determineRightType(method.getGenericReturnType()))) {
-                                                                    return ((Mono<?>) invocation.proceedWithInvocation())
-                                                                            .map(retVal -> VavrDelegate.rollbackTransactionOnEitherLeft((Either<?, ?>) retVal, txInfo));
+                                                                    return ((Mono<?>) invocation.proceedWithInvocation()).map(retVal ->
+                                                                            VavrDelegate.evaluateReactiveEitherLeft((Either<?, ?>) retVal, txInfo));
                                                                 }
                                                                 return (Mono<?>) invocation.proceedWithInvocation();
                                                             } catch (Throwable ex) {
@@ -971,7 +989,7 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
 
             // If no name specified, apply method identification as transaction name.
             if (txAttr != null && txAttr.getName() == null) {
-                txAttr = new DelegatingTransactionAttribute(txAttr) {
+                txAttr = new DelegatingTransactionAttributeWithEither(txAttr) {
                     @Override
                     public String getName() {
                         return joinpointIdentification;
@@ -1057,8 +1075,10 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
                     );
                 }
             }
+
             return Mono.empty();
         }
+
     }
 
 
