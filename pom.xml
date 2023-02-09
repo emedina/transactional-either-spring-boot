@@ -11,12 +11,12 @@
     </parent>
 
     <groupId>org.epo.cne.transactional</groupId>
-    <artifactId>transactional-usecase-spring-boot</artifactId>
+    <artifactId>transactional-either-spring-boot</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>CLOUD-NATIVE-ENGINEERING - Transactional Use Case with Spring</name>
-    <description>A Transactional interceptor when using @UseCase annotations</description>
+    <name>CLOUD-NATIVE-ENGINEERING - Transactional Either with Spring</name>
+    <description>A Transactional interceptor when using the monadic type Either as method's return</description>
 
     <properties>
         <maven.compiler.source>19</maven.compiler.source>
