@@ -53,9 +53,9 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
             }
         }
 
-        // No rule matches for Either.
+        // No rule matches for Either, but need to check in delegated as well.
         if (winner == null) {
-            return false;
+            return super.rollbackOn(ex);
         }
 
         return !(winner instanceof NoRollbackRuleAttributeWithEither);
@@ -75,7 +75,7 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
             }
         }
 
-        // No rule matches for Either.
+        // No rule matches for Either and delegate only provides rules for Throwable.
         if (winner == null) {
             return false;
         }
