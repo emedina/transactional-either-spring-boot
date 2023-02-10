@@ -53,9 +53,9 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
             }
         }
 
-        // User superclass behavior (rollback on unchecked) if no rule matches.
+        // No rule matches for Either.
         if (winner == null) {
-            return super.rollbackOn(ex);
+            return false;
         }
 
         return !(winner instanceof NoRollbackRuleAttributeWithEither);
@@ -75,7 +75,7 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
             }
         }
 
-        // User superclass behavior (rollback on unchecked) if no rule matches.
+        // No rule matches for Either.
         if (winner == null) {
             return false;
         }

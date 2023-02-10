@@ -803,31 +803,49 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
         }
 
         public static Either<?, ?> evaluateEitherLeft(Object retVal, TransactionAttribute txAttr, TransactionStatus status) {
-            return ((Either<?, ?>) retVal).peekLeft(ex -> {
-                if (txAttr.rollbackOn((Throwable) ex)) {
-                    status.setRollbackOnly();
+            return ((Either<?, ?>) retVal).peekLeft(errors -> {
+                if (txAttr != null) {
+                    if (errors instanceof Iterable) {
+                        for (Object error : (Iterable<?>) errors) {
+                            if (error instanceof Throwable && txAttr.rollbackOn((Throwable) error)) {
+                                status.setRollbackOnly();
+                                break;
+                            } else if (txAttr instanceof RuleBasedTransactionAttributeWithEither
+                                    && ((RuleBasedTransactionAttributeWithEither) txAttr).rollbackOnErrorValue(error.getClass())) {
+                                status.setRollbackOnly();
+                                break;
+                            }
+                        }
+                    } else if (errors instanceof Throwable && txAttr.rollbackOn((Throwable) errors)) {
+                        status.setRollbackOnly();
+                    } else if (txAttr instanceof RuleBasedTransactionAttributeWithEither
+                            && ((RuleBasedTransactionAttributeWithEither) txAttr).rollbackOnErrorValue(errors.getClass())) {
+                        status.setRollbackOnly();
+                    }
                 }
             });
         }
 
         public static Either<?, ?> evaluateReactiveEitherLeft(Object retVal, ReactiveTransactionInfo txinfo) {
             return ((Either<?, ?>) retVal).peekLeft(errors -> {
-                if (txinfo != null && txinfo.getTransactionAttribute() instanceof DelegatingTransactionAttributeWithEither) {
-                    final DelegatingTransactionAttributeWithEither ruleBasedTxAttr =
-                            (DelegatingTransactionAttributeWithEither) txinfo.getTransactionAttribute();
+                if (txinfo != null) {
                     if (errors instanceof Iterable) {
                         for (Object error : (Iterable<?>) errors) {
-                            if (error instanceof Throwable && ruleBasedTxAttr.rollbackOn((Throwable) error)) {
+                            if (error instanceof Throwable
+                                    && txinfo.getTransactionAttribute().rollbackOn((Throwable) error)) {
                                 txinfo.getReactiveTransaction().setRollbackOnly();
                                 break;
-                            } else if (ruleBasedTxAttr.rollbackOnErrorValue(error.getClass())) {
+                            } else if (txinfo.getTransactionAttribute() instanceof DelegatingTransactionAttributeWithEither
+                                    && ((DelegatingTransactionAttributeWithEither) txinfo.getTransactionAttribute()).rollbackOnErrorValue(error.getClass())) {
                                 txinfo.getReactiveTransaction().setRollbackOnly();
                                 break;
                             }
                         }
-                    } else if (errors instanceof Throwable && ruleBasedTxAttr.rollbackOn((Throwable) errors)) {
+                    } else if (errors instanceof Throwable
+                            && txinfo.getTransactionAttribute().rollbackOn((Throwable) errors)) {
                         txinfo.getReactiveTransaction().setRollbackOnly();
-                    } else if (ruleBasedTxAttr.rollbackOnErrorValue(errors.getClass())) {
+                    } else if (txinfo.getTransactionAttribute() instanceof DelegatingTransactionAttributeWithEither
+                            && ((DelegatingTransactionAttributeWithEither) txinfo.getTransactionAttribute()).rollbackOnErrorValue(errors.getClass())) {
                         txinfo.getReactiveTransaction().setRollbackOnly();
                     }
                 }
