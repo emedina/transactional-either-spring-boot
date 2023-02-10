@@ -1,5 +1,6 @@
 package org.epo.cne.transactional.support;
 
+import io.vavr.control.Either;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.support.AopUtils;
@@ -14,9 +15,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
- * The type Transaction interceptor.
+ * Interceptor that applies transaction demarcation to a method invocation
+ * when the monadic type {@link Either} is considered.
  *
- * @author joseluis.anton
+ * @author Enrique Medina Montenegro (em54029)
  */
 public class TransactionInterceptorWithEither extends TransactionAspectSupportWithEither implements MethodInterceptor, Serializable {
 

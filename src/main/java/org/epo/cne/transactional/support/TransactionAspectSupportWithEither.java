@@ -802,6 +802,14 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
             return (retVal instanceof Either);
         }
 
+        /**
+         * Evaluate the given Either, rolling back the transaction as appropriate when imperative programming is used.
+         *
+         * @param retVal the Either returned by the method invocation
+         * @param txAttr the transaction attribute for the method
+         * @param status the current transaction status
+         * @return the Either's right value
+         */
         public static Either<?, ?> evaluateEitherLeft(Object retVal, TransactionAttribute txAttr, TransactionStatus status) {
             return ((Either<?, ?>) retVal).peekLeft(errors -> {
                 if (txAttr != null) {
@@ -826,6 +834,13 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
             });
         }
 
+        /**
+         * Evaluate the given Either, rolling back the transaction as appropriate when reactive programming is used.
+         *
+         * @param retVal the Either returned by the method invocation
+         * @param txinfo the reactive transaction info for the method
+         * @return the Either's right value
+         */
         public static Either<?, ?> evaluateReactiveEitherLeft(Object retVal, ReactiveTransactionInfo txinfo) {
             return ((Either<?, ?>) retVal).peekLeft(errors -> {
                 if (txinfo != null) {

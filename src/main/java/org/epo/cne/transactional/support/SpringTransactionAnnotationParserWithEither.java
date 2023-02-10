@@ -29,6 +29,14 @@ public class SpringTransactionAnnotationParserWithEither extends SpringTransacti
         return AnnotationUtils.isCandidateClass(targetClass, Transactional.class);
     }
 
+    /**
+     * Overrides the default implementation to translate the transactional attributes used in
+     * {@link Transactional} to the Spring types and also to add additional attributes specific to
+     * the use of Either for rollback rules.
+     *
+     * @param element the annotated method or class
+     * @return the corresponding TransactionAttribute instance, or {@code null} if none found
+     */
     @Override
     @Nullable
     public TransactionAttribute parseTransactionAnnotation(AnnotatedElement element) {

@@ -1,6 +1,5 @@
 package org.epo.cne.transactional.support;
 
-
 import org.epo.cne.transactional.config.EnableTransactionManagementWithEither;
 import org.epo.cne.transactional.config.ProxyTransactionManagementConfigurationWithEither;
 import org.springframework.context.annotation.AdviceMode;

@@ -34,7 +34,6 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
      * Winning rule is the shallowest rule (that is, the closest in the
      * inheritance hierarchy to the exception). If no rule applies (-1),
      * return false.
-     * <p>When used with the {@link Either} type, the String </p>
      *
      * @see TransactionAttribute#rollbackOn(java.lang.Throwable)
      */
@@ -61,6 +60,15 @@ public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactio
         return !(winner instanceof NoRollbackRuleAttributeWithEither);
     }
 
+    /**
+     * Winning rule is the shallowest rule (that is, the closest in the
+     * inheritance hierarchy to the exception). If no rule applies (-1),
+     * return false.
+     * <p>When used with the {@link Either} type, allows for error values. </p>
+     *
+     * @param error the error value
+     * @return true if the error value should trigger a rollback
+     */
     public boolean rollbackOnErrorValue(Class<?> error) {
         RollbackRuleAttributeWithEither winner = null;
         int deepest = Integer.MAX_VALUE;
