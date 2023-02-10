@@ -50,10 +50,10 @@ public class SpringTransactionAnnotationParserWithEither extends SpringTransacti
                 rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
             }
             for (Class<?> rbRule : attributes.getClassArray("noRollbackForWithEither")) {
-                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+                rollbackRules.add(new NoRollbackRuleAttributeWithEither(rbRule));
             }
             for (String rbRule : attributes.getStringArray("noRollbackForClassNameWithEither")) {
-                rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));
+                rollbackRules.add(new NoRollbackRuleAttributeWithEither(rbRule));
             }
             rbta.setRollbackRulesWithEither(rollbackRules);
 
