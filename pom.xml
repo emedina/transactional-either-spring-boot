@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.epo.common.maven.poms</groupId>
         <artifactId>epo-corporate-pom</artifactId>
-        <version>5.0.23</version>
+        <version>5.0.25</version>
     </parent>
 
     <groupId>org.epo.cne.transactional</groupId>
