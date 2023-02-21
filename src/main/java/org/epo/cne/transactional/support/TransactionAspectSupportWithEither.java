@@ -55,13 +55,13 @@ public abstract class TransactionAspectSupportWithEither implements BeanFactoryA
      * Vavr library present on the classpath?
      */
     private static final boolean vavrPresent = ClassUtils.isPresent(
-            "io.vavr.control.Either", TransactionAspectSupport.class.getClassLoader());
+            "io.vavr.control.Either", TransactionAspectSupportWithEither.class.getClassLoader());
 
     /**
      * Reactive Streams API present on the classpath?
      */
     private static final boolean reactiveStreamsPresent =
-            ClassUtils.isPresent("org.reactivestreams.Publisher", TransactionAspectSupport.class.getClassLoader());
+            ClassUtils.isPresent("org.reactivestreams.Publisher", TransactionAspectSupportWithEither.class.getClassLoader());
 
     /**
      * Holder to support the {@code currentTransactionStatus()} method,
