@@ -36,7 +36,7 @@ public class ProxyTransactionManagementConfigurationWithEither extends AbstractT
         }
     }
 
-    @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
+    @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME + "-either")
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
             TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptor) {
