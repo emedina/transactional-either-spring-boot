@@ -1,59 +1,42 @@
 package org.epo.cne.transactional.config;
 
 import io.vavr.control.Either;
+import org.epo.cne.sharedkernel.transactional.Transactional;
 import org.epo.cne.transactional.support.SpringTransactionAnnotationParserWithEither;
 import org.epo.cne.transactional.support.TransactionInterceptorWithEither;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
-import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.transaction.annotation.AbstractTransactionManagementConfiguration;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
-import org.springframework.transaction.config.TransactionManagementConfigUtils;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
 
 /**
- * {@code @Configuration} class that registers a {@link BeanFactoryTransactionAttributeSourceAdvisor}
- * that is aware of the monadic type {@link Either} and can be used to enable
- * Spring's annotation-driven transaction management capability.
+ * {@code @Configuration} class that registers a custom {@link AnnotationTransactionAttributeSource}
+ * that can work with the custom {@link Transactional} to be aware of the monadic type {@link Either}.
  *
  * @author Enrique Medina Montenegro (em54029)
  */
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-public class ProxyTransactionManagementConfigurationWithEither extends AbstractTransactionManagementConfiguration {
+public class TransactionManagerConfigWithEither {
 
-    @Override
-    public void setImportMetadata(AnnotationMetadata importMetadata) {
-        this.enableTx = AnnotationAttributes.fromMap(
-                importMetadata.getAnnotationAttributes(EnableTransactionManagementWithEither.class.getName()));
-        if (this.enableTx == null) {
-            throw new IllegalArgumentException(
-                    "@EnableTransactionManagementWithEither is not present on importing class " + importMetadata.getClassName());
-        }
-    }
-
-    @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME + "-either")
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor(
+    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(
             TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptor) {
 
         BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
         advisor.setTransactionAttributeSource(transactionAttributeSource);
         advisor.setAdvice(transactionInterceptor);
-        if (this.enableTx != null) {
-            advisor.setOrder(this.enableTx.<Integer>getNumber("order"));
-        }
+        advisor.setOrder(1);
 
         return advisor;
     }
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionAttributeSource transactionAttributeSource() {
+    public TransactionAttributeSource transactionAttributeSourceWithEither() {
         // Create custom transaction attribute source.
         return new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither());
     }
