@@ -43,7 +43,7 @@ public class TransactionManagerConfigWithEither {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionInterceptorWithEither transactionInterceptor(TransactionAttributeSource transactionAttributeSource) {
+    public TransactionInterceptorWithEither transactionInterceptorWithEither(TransactionAttributeSource transactionAttributeSource) {
         TransactionInterceptorWithEither result = new TransactionInterceptorWithEither();
         result.setTransactionAttributeSource(transactionAttributeSource);
 
