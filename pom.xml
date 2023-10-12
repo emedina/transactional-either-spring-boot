@@ -12,7 +12,7 @@
 
     <groupId>org.epo.cne.transactional</groupId>
     <artifactId>transactional-either-spring-boot</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <packaging>jar</packaging>
 
     <name>CLOUD-NATIVE-ENGINEERING - Transactional Either with Spring</name>
@@ -27,7 +27,7 @@
         <versions-maven-plugin.version>2.15.0</versions-maven-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
 
-        <spring-boot.version>3.0.6</spring-boot.version>
+        <spring-boot.version>3.1.4</spring-boot.version>
 
         <shared-kernel.version>1.0.1</shared-kernel.version>
     </properties>
