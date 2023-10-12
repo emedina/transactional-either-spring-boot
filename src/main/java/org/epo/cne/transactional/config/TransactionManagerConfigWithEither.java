@@ -24,11 +24,9 @@ public class TransactionManagerConfigWithEither {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(
-            TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptor) {
-
+    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(final TransactionInterceptorWithEither transactionInterceptor) {
         BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
-        advisor.setTransactionAttributeSource(transactionAttributeSource);
+        advisor.setTransactionAttributeSource(new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither()));
         advisor.setAdvice(transactionInterceptor);
         advisor.setOrder(1);
 
@@ -37,16 +35,9 @@ public class TransactionManagerConfigWithEither {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionAttributeSource transactionAttributeSourceWithEither() {
-        // Create custom transaction attribute source.
-        return new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither());
-    }
-
-    @Bean
-    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionInterceptorWithEither transactionInterceptorWithEither(TransactionAttributeSource transactionAttributeSource) {
+    public TransactionInterceptorWithEither transactionInterceptorWithEither() {
         TransactionInterceptorWithEither result = new TransactionInterceptorWithEither();
-        result.setTransactionAttributeSource(transactionAttributeSource);
+        result.setTransactionAttributeSource(new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither()));
 
         return result;
     }

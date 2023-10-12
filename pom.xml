@@ -12,7 +12,7 @@
 
     <groupId>org.epo.cne.transactional</groupId>
     <artifactId>transactional-either-spring-boot</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
 
     <name>CLOUD-NATIVE-ENGINEERING - Transactional Either with Spring</name>
