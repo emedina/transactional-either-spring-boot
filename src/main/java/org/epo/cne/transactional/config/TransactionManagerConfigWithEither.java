@@ -22,6 +22,7 @@ import org.springframework.transaction.interceptor.TransactionAttributeSource;
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class TransactionManagerConfigWithEither {
 
+    @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(
             TransactionAttributeSource transactionAttributeSource, TransactionInterceptorWithEither transactionInterceptor) {
