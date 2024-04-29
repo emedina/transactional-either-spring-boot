@@ -9,10 +9,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * Interceptor that applies transaction demarcation to a method invocation
@@ -54,6 +51,7 @@ public class TransactionInterceptorWithEither extends TransactionAspectSupportWi
     // Serialization support
     //---------------------------------------------------------------------
 
+    @Serial
     private void writeObject(ObjectOutputStream oos) throws IOException {
         // Rely on default serialization, although this class itself doesn't carry state anyway...
         oos.defaultWriteObject();
@@ -65,6 +63,7 @@ public class TransactionInterceptorWithEither extends TransactionAspectSupportWi
         oos.writeObject(getBeanFactory());
     }
 
+    @Serial
     private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
         // Rely on default serialization, although this class itself doesn't carry state anyway...
         ois.defaultReadObject();

@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
-import org.springframework.transaction.interceptor.TransactionAttributeSource;
 
 /**
  * {@code @Configuration} class that registers a custom {@link AnnotationTransactionAttributeSource}
