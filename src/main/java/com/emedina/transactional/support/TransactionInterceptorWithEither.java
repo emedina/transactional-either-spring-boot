@@ -1,4 +1,4 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
 import io.vavr.control.Either;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -15,7 +15,7 @@ import java.io.*;
  * Interceptor that applies transaction demarcation to a method invocation
  * when the monadic type {@link Either} is considered.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 public class TransactionInterceptorWithEither extends TransactionAspectSupportWithEither implements MethodInterceptor, Serializable {
 

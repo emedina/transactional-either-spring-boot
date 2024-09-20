@@ -1,4 +1,4 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
 import io.vavr.control.Either;
 import org.springframework.lang.Nullable;
@@ -8,7 +8,7 @@ import org.springframework.transaction.interceptor.RollbackRuleAttribute;
  * Extension of {@link RollbackRuleAttribute} that indicates a rollback rule
  * when working with {@link Either} monadic type.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 public class RollbackRuleAttributeWithEither {
 

@@ -1,4 +1,4 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
 import io.vavr.control.Either;
 import kotlin.coroutines.Continuation;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.BeanFactoryAnnotationUtils;
-import org.springframework.core.*;
 import org.springframework.core.CoroutinesUtils;
 import org.springframework.core.KotlinDetector;
 import org.springframework.core.MethodParameter;
@@ -44,7 +43,7 @@ import java.util.concurrent.Future;
  * Re-implementation of the abstract base class {@link TransactionAspectSupport}
  * to support also the {@link Either} type.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 public abstract class TransactionAspectSupportWithEither implements BeanFactoryAware, InitializingBean {
 

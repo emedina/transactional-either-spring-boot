@@ -1,4 +1,4 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
 import io.vavr.control.Either;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Extension of the {@link RuleBasedTransactionAttribute} that allows to use the {@link Either} type.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactionAttribute {
 

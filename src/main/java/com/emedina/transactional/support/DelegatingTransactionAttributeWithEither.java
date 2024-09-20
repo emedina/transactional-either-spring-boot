@@ -1,4 +1,4 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
 import io.vavr.control.Either;
 import org.springframework.lang.Nullable;
@@ -13,7 +13,7 @@ import java.util.Collection;
  * Delegating transaction attribute that is aware of the monadic type {@link Either}.
  * <p>needed when using reactive types such as {@link Mono}. </p>
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 public abstract class DelegatingTransactionAttributeWithEither extends DelegatingTransactionDefinition
         implements TransactionAttribute, Serializable {

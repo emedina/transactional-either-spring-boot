@@ -1,6 +1,6 @@
-package org.epo.cne.transactional.support;
+package com.emedina.transactional.support;
 
-import org.epo.cne.sharedkernel.transactional.Transactional;
+import com.emedina.sharedkernel.transactional.Transactional;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -19,7 +19,7 @@ import java.util.List;
  * This class is a copy of {@link SpringTransactionAnnotationParser} with the only difference that
  * it translates the transactional attributes used in {@link Transactional} to the Spring types.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 @SuppressWarnings("serial")
 public class SpringTransactionAnnotationParserWithEither extends SpringTransactionAnnotationParser {

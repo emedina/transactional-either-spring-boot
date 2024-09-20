@@ -1,9 +1,9 @@
-package org.epo.cne.transactional.config;
+package com.emedina.transactional.config;
 
 import io.vavr.control.Either;
-import org.epo.cne.sharedkernel.transactional.Transactional;
-import org.epo.cne.transactional.support.SpringTransactionAnnotationParserWithEither;
-import org.epo.cne.transactional.support.TransactionInterceptorWithEither;
+import com.emedina.sharedkernel.transactional.Transactional;
+import com.emedina.transactional.support.SpringTransactionAnnotationParserWithEither;
+import com.emedina.transactional.support.TransactionInterceptorWithEither;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ import org.springframework.transaction.interceptor.BeanFactoryTransactionAttribu
  * {@code @Configuration} class that registers a custom {@link AnnotationTransactionAttributeSource}
  * that can work with the custom {@link Transactional} to be aware of the monadic type {@link Either}.
  *
- * @author Enrique Medina Montenegro (em54029)
+ * @author Enrique Medina Montenegro
  */
 @Configuration(proxyBeanMethods = false)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
