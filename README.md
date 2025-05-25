@@ -154,9 +154,19 @@ mvn test
 ### 📊 Test Coverage
 
 - ✅ **Unit Tests**: All components tested with JUnit 5 and Mockito
-- ✅ **Integration Scenarios**: Transaction behavior validation
-- ✅ **Edge Cases**: Error conditions and rollback scenarios covered
-- ✅ **90%+ Coverage**: Comprehensive test suite with JaCoCo
+  - **TransactionConfiguration**: Configuration beans and dependency wiring
+  - **CustomTransactionAnnotationParser**: Annotation parsing and attribute mapping
+  - **EitherAwareTransactionInterceptor**: Transaction handling with Either types
+- ✅ **Behavior Validation**: Thorough verification of transaction behavior
+  - Either.left() triggering transaction rollback
+  - Either.right() allowing transaction commit
+  - Exception handling and proper cleanup
+- ✅ **Edge Cases**: Comprehensive coverage of special scenarios
+  - Null target classes
+  - Various propagation and isolation levels
+  - Custom rollback rules and labels
+  - All enum value combinations
+- ✅ **90%+ Coverage**: Exceeding JaCoCo requirements with Given/When/Then test structure
 
 ### 🔧 JaCoCo Coverage
 
@@ -167,6 +177,15 @@ mvn clean test jacoco:report
 ```
 
 View the coverage report at `target/site/jacoco/index.html`
+
+### 🧠 Test Design Philosophy
+
+The test suite follows a structured approach:
+
+- **Given/When/Then**: Clear test structure for readability
+- **Isolated Components**: Pure unit tests with mocking
+- **Exhaustive Scenarios**: Testing all enum values and edge cases
+- **Behavior Verification**: Focus on verifying correct transaction behavior
 
 ## 📋 Dependencies
 
@@ -214,7 +233,7 @@ mvn javadoc:javadoc
 2. 🌿 Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. ✅ Add tests for your changes
 4. 🧪 Ensure all tests pass (`mvn test`)
-5. 📊 Maintain 50%+ test coverage
+5. 📊 Maintain 90%+ test coverage
 6. 📝 Update documentation as needed
 7. 📤 Submit a pull request
 
