@@ -1,13 +1,12 @@
 package com.emedina.transactional.support;
 
-import io.vavr.control.Either;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
+
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 
-import java.util.List;
+import io.vavr.control.Either;
 
 /**
  * Extension of the {@link RuleBasedTransactionAttribute} that allows to use the {@link Either} type.
@@ -16,17 +15,24 @@ import java.util.List;
  */
 public class RuleBasedTransactionAttributeWithEither extends RuleBasedTransactionAttribute {
 
-    @Getter
-    @Setter
     @Nullable
     private List<RollbackRuleAttributeWithEither> rollbackRulesWithEither;
 
+    @Nullable
+    public List<RollbackRuleAttributeWithEither> getRollbackRulesWithEither() {
+        return rollbackRulesWithEither;
+    }
+
+    public void setRollbackRulesWithEither(@Nullable List<RollbackRuleAttributeWithEither> rollbackRulesWithEither) {
+        this.rollbackRulesWithEither = rollbackRulesWithEither;
+    }
 
     private RuleBasedTransactionAttributeWithEither(RuleBasedTransactionAttribute ruleBasedTransactionAttribute) {
         super(ruleBasedTransactionAttribute);
     }
 
-    public static RuleBasedTransactionAttributeWithEither from(RuleBasedTransactionAttribute ruleBasedTransactionAttribute) {
+    public static RuleBasedTransactionAttributeWithEither from(
+        RuleBasedTransactionAttribute ruleBasedTransactionAttribute) {
         return new RuleBasedTransactionAttributeWithEither(ruleBasedTransactionAttribute);
     }
 
