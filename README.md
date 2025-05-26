@@ -1,5 +1,9 @@
 # 🔄 Spring Transactional Either
 
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Java Version](https://img.shields.io/badge/Java-24-blue)
+![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
+
 A Spring Boot library that extends transaction management to work seamlessly with functional programming patterns using Vavr's Either type, enabling intelligent rollback decisions based on Either left values.
 
 ## 📚 Further Learning
@@ -242,7 +246,7 @@ mvn javadoc:javadoc
 2. 🌿 Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. ✅ Add tests for your changes
 4. 🧪 Ensure all tests pass (`mvn test`)
-5. 📊 Maintain 50%+ test coverage
+5. 📊 Maintain 90%+ test coverage
 6. 📝 Update documentation as needed
 7. 📤 Submit a pull request
 
