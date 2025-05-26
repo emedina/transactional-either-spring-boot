@@ -2,6 +2,38 @@
 
 A Spring Boot library that extends transaction management to work seamlessly with functional programming patterns using Vavr's Either type, enabling intelligent rollback decisions based on Either left values.
 
+## 📚 Further Learning
+
+This implementation is part of a comprehensive exploration of Hexagonal Architecture patterns. The concepts are covered in depth in:
+
+**English Version**
+*Decoupling by Design: A Pragmatic Approach to Hexagonal Architecture*
+
+- [PDF](https://leanpub.com/decouplingbydesignapractitionersguidetohexagonalarchitecture)  
+- [Kindle](https://a.co/d/4KwauyK)  
+- [Paperback](https://a.co/d/cGQI8gX)  
+
+**Versión en Español**  
+*Desacoplamiento por Diseño: Una Guía Práctica para la Arquitectura Hexagonal*
+
+- [PDF](https://leanpub.com/desacoplamientopordiseounaguaprcticaparalaarquitecturahexagonal)  
+- [Kindle](https://amzn.eu/d/ic50CoH)  
+- [Tapa blanda](https://amzn.eu/d/1fHOpN6)  
+
+The book provides in-depth coverage of:
+
+- Functional transaction management patterns
+- Either type integration with Spring transactions
+- Custom rollback strategies for monadic error handling
+- Hexagonal architecture with functional programming
+- Real-world applications of Either in transactions
+- Testing strategies for transactional Either flows
+- Composition patterns for transactional operations
+
+---
+
+[Rest of existing README content]
+
 ## 🎯 Overview
 
 This library bridges the gap between Spring's declarative transaction management and functional programming with Either types. It provides custom transaction interceptors and attribute parsers that understand Either return types and can handle rollback scenarios based on Either's left values, promoting clean error handling without exceptions.
