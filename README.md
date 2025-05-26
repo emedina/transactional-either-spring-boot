@@ -30,10 +30,6 @@ The book provides in-depth coverage of:
 - Testing strategies for transactional Either flows
 - Composition patterns for transactional operations
 
----
-
-[Rest of existing README content]
-
 ## 🎯 Overview
 
 This library bridges the gap between Spring's declarative transaction management and functional programming with Either types. It provides custom transaction interceptors and attribute parsers that understand Either return types and can handle rollback scenarios based on Either's left values, promoting clean error handling without exceptions.
