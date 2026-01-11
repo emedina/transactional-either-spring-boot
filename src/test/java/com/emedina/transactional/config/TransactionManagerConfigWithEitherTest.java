@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
 
 import com.emedina.transactional.support.TransactionInterceptorWithEither;
@@ -19,10 +20,11 @@ class TransactionManagerConfigWithEitherTest {
     void testTransactionAdvisorWithEither() {
         // given
         TransactionManagerConfigWithEither config = new TransactionManagerConfigWithEither();
+        AnnotationTransactionAttributeSource mockAttributeSource = mock(AnnotationTransactionAttributeSource.class);
         TransactionInterceptorWithEither mockInterceptor = mock(TransactionInterceptorWithEither.class);
 
         // when
-        BeanFactoryTransactionAttributeSourceAdvisor advisor = config.transactionAdvisorWithEither(mockInterceptor);
+        BeanFactoryTransactionAttributeSourceAdvisor advisor = config.transactionAdvisorWithEither(mockAttributeSource, mockInterceptor);
 
         // then
         assertThat(advisor).isNotNull();
@@ -35,15 +37,15 @@ class TransactionManagerConfigWithEitherTest {
     void testTransactionInterceptorWithEither() {
         // given
         TransactionManagerConfigWithEither config = new TransactionManagerConfigWithEither();
+        AnnotationTransactionAttributeSource mockAttributeSource = mock(AnnotationTransactionAttributeSource.class);
 
         // when
-        TransactionInterceptorWithEither interceptor = config.transactionInterceptorWithEither();
+        TransactionInterceptorWithEither interceptor = config.transactionInterceptorWithEither(mockAttributeSource);
 
         // then
         assertThat(interceptor).isNotNull();
         assertThat(interceptor.getTransactionAttributeSource()).isNotNull();
-        assertThat(interceptor.getTransactionAttributeSource().getClass().getName())
-            .contains("AnnotationTransactionAttributeSource");
+        assertThat(interceptor.getTransactionAttributeSource()).isSameAs(mockAttributeSource);
     }
 
 }
