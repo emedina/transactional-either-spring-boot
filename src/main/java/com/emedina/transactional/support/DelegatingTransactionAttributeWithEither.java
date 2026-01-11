@@ -1,13 +1,13 @@
 package com.emedina.transactional.support;
 
-import io.vavr.control.Either;
-import org.springframework.lang.Nullable;
+import java.util.Collection;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.support.DelegatingTransactionDefinition;
-import reactor.core.publisher.Mono;
 
-import java.io.Serializable;
-import java.util.Collection;
+import io.vavr.control.Either;
+import reactor.core.publisher.Mono;
 
 /**
  * Delegating transaction attribute that is aware of the monadic type {@link Either}.
@@ -16,10 +16,9 @@ import java.util.Collection;
  * @author Enrique Medina Montenegro
  */
 public abstract class DelegatingTransactionAttributeWithEither extends DelegatingTransactionDefinition
-        implements TransactionAttribute, Serializable {
+    implements TransactionAttribute {
 
     private final TransactionAttribute targetAttribute;
-
 
     /**
      * Create a DelegatingTransactionAttribute for the given target attribute.

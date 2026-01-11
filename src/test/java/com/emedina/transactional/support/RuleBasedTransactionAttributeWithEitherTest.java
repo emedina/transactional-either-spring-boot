@@ -168,4 +168,5 @@ class RuleBasedTransactionAttributeWithEitherTest {
         // then
         assertThat(retrievedRules).isEqualTo(rules);
     }
+
 }

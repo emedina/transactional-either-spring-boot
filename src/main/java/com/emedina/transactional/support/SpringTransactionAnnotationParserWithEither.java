@@ -1,19 +1,20 @@
 package com.emedina.transactional.support;
 
-import com.emedina.sharedkernel.transactional.Transactional;
+import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.SpringTransactionAnnotationParser;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.ArrayList;
-import java.util.List;
+import com.emedina.sharedkernel.transactional.Transactional;
 
 /**
  * This class is a copy of {@link SpringTransactionAnnotationParser} with the only difference that
@@ -21,7 +22,6 @@ import java.util.List;
  *
  * @author Enrique Medina Montenegro
  */
-@SuppressWarnings("serial")
 public class SpringTransactionAnnotationParserWithEither extends SpringTransactionAnnotationParser {
 
     @Override
@@ -41,7 +41,7 @@ public class SpringTransactionAnnotationParserWithEither extends SpringTransacti
     @Nullable
     public TransactionAttribute parseTransactionAnnotation(AnnotatedElement element) {
         AnnotationAttributes attributes = AnnotatedElementUtils.findMergedAnnotationAttributes(
-                element, Transactional.class, false, false);
+            element, Transactional.class, false, false);
         if (attributes != null) {
             // Override with "real" Spring types.
             attributes.put("propagation", Propagation.valueOf(attributes.get("propagation").toString()));
@@ -49,7 +49,7 @@ public class SpringTransactionAnnotationParserWithEither extends SpringTransacti
 
             // Add additional attributes specific to the use of Either.
             RuleBasedTransactionAttributeWithEither rbta = RuleBasedTransactionAttributeWithEither.from(
-                    (RuleBasedTransactionAttribute) super.parseTransactionAnnotation(attributes));
+                (RuleBasedTransactionAttribute) super.parseTransactionAnnotation(attributes));
             List<RollbackRuleAttributeWithEither> rollbackRules = new ArrayList<>();
             for (Class<?> rbRule : attributes.getClassArray("rollbackForWithEither")) {
                 rollbackRules.add(new RollbackRuleAttributeWithEither(rbRule));

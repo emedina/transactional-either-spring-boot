@@ -106,4 +106,5 @@ class DelegatingTransactionAttributeWithEitherTest {
         // then
         assertThat(shouldRollback).isFalse();
     }
+
 }

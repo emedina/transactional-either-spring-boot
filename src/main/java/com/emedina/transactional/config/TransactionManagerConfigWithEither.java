@@ -1,15 +1,17 @@
 package com.emedina.transactional.config;
 
-import io.vavr.control.Either;
-import com.emedina.sharedkernel.transactional.Transactional;
-import com.emedina.transactional.support.SpringTransactionAnnotationParserWithEither;
-import com.emedina.transactional.support.TransactionInterceptorWithEither;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.BeanFactoryTransactionAttributeSourceAdvisor;
+
+import com.emedina.sharedkernel.transactional.Transactional;
+import com.emedina.transactional.support.SpringTransactionAnnotationParserWithEither;
+import com.emedina.transactional.support.TransactionInterceptorWithEither;
+
+import io.vavr.control.Either;
 
 /**
  * {@code @Configuration} class that registers a custom {@link AnnotationTransactionAttributeSource}
@@ -23,9 +25,17 @@ public class TransactionManagerConfigWithEither {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(final TransactionInterceptorWithEither transactionInterceptor) {
+    public AnnotationTransactionAttributeSource transactionAttributeSourceWithEither() {
+        return new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither());
+    }
+
+    @Bean
+    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+    public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisorWithEither(
+        final AnnotationTransactionAttributeSource transactionAttributeSource,
+        final TransactionInterceptorWithEither transactionInterceptor) {
         BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
-        advisor.setTransactionAttributeSource(new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither()));
+        advisor.setTransactionAttributeSource(transactionAttributeSource);
         advisor.setAdvice(transactionInterceptor);
         advisor.setOrder(1);
 
@@ -34,9 +44,10 @@ public class TransactionManagerConfigWithEither {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public TransactionInterceptorWithEither transactionInterceptorWithEither() {
+    public TransactionInterceptorWithEither transactionInterceptorWithEither(
+        final AnnotationTransactionAttributeSource transactionAttributeSource) {
         TransactionInterceptorWithEither result = new TransactionInterceptorWithEither();
-        result.setTransactionAttributeSource(new AnnotationTransactionAttributeSource(new SpringTransactionAnnotationParserWithEither()));
+        result.setTransactionAttributeSource(transactionAttributeSource);
 
         return result;
     }

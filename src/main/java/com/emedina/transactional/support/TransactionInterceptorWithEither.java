@@ -1,15 +1,20 @@
 package com.emedina.transactional.support;
 
-import io.vavr.control.Either;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.io.Serializable;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
 
-import java.io.*;
+import io.vavr.control.Either;
 
 /**
  * Interceptor that applies transaction demarcation to a method invocation
@@ -17,7 +22,8 @@ import java.io.*;
  *
  * @author Enrique Medina Montenegro
  */
-public class TransactionInterceptorWithEither extends TransactionAspectSupportWithEither implements MethodInterceptor, Serializable {
+public class TransactionInterceptorWithEither extends TransactionAspectSupportWithEither implements MethodInterceptor,
+    Serializable {
 
     @Override
     @Nullable

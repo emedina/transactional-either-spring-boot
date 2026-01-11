@@ -175,4 +175,5 @@ class SpringTransactionAnnotationParserWithEitherTest {
     @Transactional
     static class TestClass {
     }
+
 }

@@ -323,4 +323,5 @@ class TransactionAspectSupportWithEitherTest {
     Either<RuntimeException, String> methodReturningEither() {
         return Either.right("success");
     }
+
 }

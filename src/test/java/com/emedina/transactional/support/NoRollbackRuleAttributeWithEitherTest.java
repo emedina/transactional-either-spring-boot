@@ -52,4 +52,5 @@ class NoRollbackRuleAttributeWithEitherTest {
         assertThat(result).contains("RollbackRuleAttributeWithEither");
         assertThat(result).contains(RuntimeException.class.getName());
     }
+
 }

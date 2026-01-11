@@ -98,4 +98,5 @@ class TransactionAspectSupportWithEitherInnerClassesTest {
     Mono<Either<RuntimeException, String>> methodReturningMonoEither() {
         return Mono.just(Either.right("success"));
     }
+
 }

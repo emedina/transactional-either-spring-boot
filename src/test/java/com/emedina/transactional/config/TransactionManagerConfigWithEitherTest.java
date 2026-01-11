@@ -45,4 +45,5 @@ class TransactionManagerConfigWithEitherTest {
         assertThat(interceptor.getTransactionAttributeSource().getClass().getName())
             .contains("AnnotationTransactionAttributeSource");
     }
+
 }

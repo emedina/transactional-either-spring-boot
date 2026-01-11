@@ -97,4 +97,5 @@ class TransactionInterceptorWithEitherTest {
         assertThat(deserialized).isNotSameAs(original);
         assertThat(deserialized.getTransactionManagerBeanName()).isEqualTo("txManager");
     }
+
 }
