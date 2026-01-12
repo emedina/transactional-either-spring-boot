@@ -1,7 +1,7 @@
 # 🔄 Spring Transactional Either
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
-![Java Version](https://img.shields.io/badge/Java-24-blue)
+![Java Version](https://img.shields.io/badge/Java-25-blue)
 ![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
 
 A Spring Boot library that extends transaction management to work seamlessly with functional programming patterns using Vavr's Either type, enabling intelligent rollback decisions based on Either left values.
@@ -204,25 +204,25 @@ View the coverage report at `target/site/jacoco/index.html`
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| **Spring Boot** | 3.5.0 | Core Spring Boot integration |
-| **Java** | 24+ | Runtime platform |
-| **Vavr** | 0.10.6 | Functional programming with Either |
+| **Spring Boot** | 4.0.1 | Core Spring Boot integration |
+| **Java** | 25+ | Runtime platform |
+| **Vavr** | 0.11.0 | Functional programming with Either |
 | **Shared Kernel Transactional** | 1.0.0 | Transaction interfaces |
 
 ### Test Dependencies
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| **JUnit Jupiter** | 5.11.3 | Testing framework |
-| **Mockito** | 5.14.2 | Mocking framework |
-| **AssertJ** | 3.26.3 | Fluent assertions |
-| **SLF4J** | 2.0.16 | Logging framework |
+| **JUnit Jupiter** | 6.0.2 | Testing framework |
+| **Mockito** | 5.21.0 | Mocking framework |
+| **AssertJ** | 3.27.6 | Fluent assertions |
+| **SLF4J** | 2.0.17 | Logging framework |
 
 ## 🔧 Build Requirements
 
-- **Java 24+**
+- **Java 25+**
 - **Maven 3.9+**
-- **Spring Boot 3.5.0+**
+- **Spring Boot 4.0.1+**
 
 ### Building
 
