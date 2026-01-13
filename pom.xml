@@ -3,13 +3,35 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.emedina.transactional</groupId>
+    <groupId>io.github.emedina</groupId>
     <artifactId>transactional-either-spring-boot</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Transactional Either with Spring</name>
     <description>A Transactional interceptor when using the monadic type Either as method's return</description>
+    <url>https://github.com/emedina/transactional-either-spring-boot</url>
+
+    <developers>
+        <developer>
+            <id>emedina</id>
+            <name>Enrique Medina Montenegro</name>
+            <email>enrique@medinamontenegro.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/emedina/transactional-either-spring-boot.git</connection>
+        <developerConnection>scm:git:ssh://github.com:emedina/transactional-either-spring-boot.git</developerConnection>
+        <url>https://github.com/emedina/transactional-either-spring-boot</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
     <properties>
         <java.version>25</java.version>
@@ -35,6 +57,9 @@
         <!-- Plugins -->
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -132,12 +157,12 @@
         </dependency>
 
         <dependency>
-            <groupId>com.emedina.sharedkernel</groupId>
+            <groupId>io.github.emedina</groupId>
             <artifactId>shared-kernel-domain</artifactId>
             <version>${shared-kernel.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.emedina.sharedkernel</groupId>
+            <groupId>io.github.emedina</groupId>
             <artifactId>shared-kernel-transactional</artifactId>
             <version>${shared-kernel.version}</version>
         </dependency>
@@ -276,7 +301,67 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <failOnError>false</failOnError>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Publish in Maven Central -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
