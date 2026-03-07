@@ -12,7 +12,7 @@ import com.emedina.sharedkernel.transactional.Transactional;
 /**
  * Unit tests for {@link SpringTransactionAnnotationParserWithEither}.
  *
- * @author Test Author
+ * @author Enrique Medina Montenegro
  */
 class SpringTransactionAnnotationParserWithEitherTest {
 
