@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 /**
  * Unit tests for VavrDelegate in {@link TransactionAspectSupportWithEither}.
  *
- * @author Test Author
+ * @author Enrique Medina Montenegro
  */
 class TransactionAspectSupportWithEitherInnerClassesTest {
 
